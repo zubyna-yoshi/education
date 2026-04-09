@@ -1,7 +1,13 @@
 {
+  "version": 2,
   "redirects": [
     {
       "source": "/",
+      "destination": "/article_viewer.html",
+      "permanent": false
+    },
+    {
+      "source": "/output/article_viewer.html",
       "destination": "/article_viewer.html",
       "permanent": false
     }
