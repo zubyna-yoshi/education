@@ -29,6 +29,65 @@ def main() -> None:
 
     payload = json.dumps(data, ensure_ascii=False)
 
+    # Optional pre-scanned QR mapping (comic page -> URL)
+    qr_page_urls: dict[int, str] = {}
+    qr_json_path = index_path.parent / 'qr_detect_results.json'
+    if qr_json_path.exists():
+        try:
+            rows = json.loads(qr_json_path.read_text(encoding='utf-8'))
+            for row in rows:
+                page_name = str((row or {}).get('page') or '')
+                url = str((row or {}).get('data') or '').strip()
+                if not url:
+                    continue
+                # e.g. page_0012.jpg -> 12
+                stem = Path(page_name).stem
+                if stem.startswith('page_'):
+                    num = int(stem.replace('page_', ''), 10)
+                    qr_page_urls[num] = url
+        except Exception:
+            qr_page_urls = {}
+
+    qr_payload = json.dumps(qr_page_urls, ensure_ascii=False)
+
+    # Article-level fallback URL: choose nearest detected QR page to comic first_page.
+    article_qr_fallback: dict[str, str] = {}
+    qr_pages = sorted(qr_page_urls.keys())
+
+    def nearest_qr_url(page_no: int, max_dist: int = 20) -> str:
+        if not qr_pages:
+            return ''
+        best_page = None
+        best_dist = None
+        for p in qr_pages:
+            d = abs(p - page_no)
+            if best_dist is None or d < best_dist:
+                best_page = p
+                best_dist = d
+        if best_page is None or best_dist is None or best_dist > max_dist:
+            return ''
+        return qr_page_urls.get(best_page, '')
+
+    for akey, article in data.items():
+        docs = article.get('documents') or {}
+        comic_doc = None
+        for dkey, dval in docs.items():
+            if '만화' in str(dkey):
+                comic_doc = dval
+                break
+        if comic_doc is None and docs:
+            comic_doc = next(iter(docs.values()))
+        if not comic_doc:
+            continue
+        page_no = int(comic_doc.get('first_page') or 0)
+        if page_no <= 0:
+            continue
+        u = nearest_qr_url(page_no)
+        if u:
+            article_qr_fallback[str(akey)] = u
+
+    article_qr_payload = json.dumps(article_qr_fallback, ensure_ascii=False)
+
     html = f"""<!doctype html>
 <html lang=\"ko\">
 <head>
@@ -226,7 +285,7 @@ def main() -> None:
           </div>
           <div id=\"photoList\" class=\"photos\"></div>
           <div class=\"crime-box\">
-            <div class=\"crime-title\">범죄인지 예시 (근로감독관 작성)</div>
+            <div class=\"crime-title\">감독결과보고 예시 (근로감독관 작성)</div>
             <textarea id=\"crimeInput\" class=\"crime-input\" placeholder=\"예: 안전대 미착용 상태를 인지하고도 작업을 계속 지시한 정황이 있어, 관련 진술/점검기록 확보 후 범죄인지 검토\"></textarea>
             <div class=\"crime-actions\">
               <button id=\"addCrime\" type=\"button\">예시 추가</button>
@@ -262,8 +321,11 @@ def main() -> None:
     </div>
   </div>
 
+  <script src=\"https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js\"></script>
   <script>
     const DATA = {payload};
+    const QR_PAGE_URLS = {qr_payload};
+    const ARTICLE_QR_FALLBACK = {article_qr_payload};
     const entries = Object.values(DATA).sort((a, b) => (a.article_no - b.article_no) || ((a.sub_no || 0) - (b.sub_no || 0)));
 
     const sel = document.getElementById('articleSelect');
@@ -299,10 +361,54 @@ def main() -> None:
 
     const STORAGE_KEY = 'labor_inspector_uploaded_photos_v1';
     const CRIME_STORAGE_KEY = 'labor_inspector_crime_examples_v1';
+    const PRESET_FLAG_KEY = 'labor_inspector_preset_v1';
     const MAX_PHOTOS = 6;
     const MAX_VISIBLE_PHOTOS = 6;
+    const IS_OUTPUT_CONTEXT = /\\/output\\//.test(window.location.pathname || '');
+    const ASSET_PREFIX = IS_OUTPUT_CONTEXT ? 'assets' : 'output/assets';
+    const PRESET_ARTICLE_43 = [
+      {{
+        id: 'preset_43_1',
+        name: '43조_현장사진_1.jpeg',
+        dataUrl: `${{ASSET_PREFIX}}/field43-common-1.jpeg`,
+        articleKey: '43',
+        articleLabel: '제43조',
+        likeCount: 0,
+        dislikeCount: 10,
+      }},
+      {{
+        id: 'preset_43_2',
+        name: '43조_현장사진_2.jpeg',
+        dataUrl: `${{ASSET_PREFIX}}/field43-common-2.jpeg`,
+        articleKey: '43',
+        articleLabel: '제43조',
+        likeCount: 8,
+        dislikeCount: 0,
+      }},
+      {{
+        id: 'preset_43_3',
+        name: '43조_현장사진_3.jpeg',
+        dataUrl: `${{ASSET_PREFIX}}/field43-common-3.jpeg`,
+        articleKey: '43',
+        articleLabel: '제43조',
+        likeCount: 6,
+        dislikeCount: 0,
+      }},
+    ];
+    const PRESET_CRIME_EXAMPLES = [
+      {{
+        id: 'preset_crime_43_1',
+        articleKey: '43',
+        articleLabel: '제43조',
+        text: 'XX아파트 옥상 개구부 덮개 미설치로 근로자 추락 위험',
+        likeCount: 6,
+        dislikeCount: 0,
+      }},
+    ];
     let activeArticleKey = entries.length ? entries[0].article_key : '';
     let currentComicUrlFallback = '';
+    let currentComicTextFile = '';
+    let currentComicPageNo = 0;
     let termHoverTimer = null;
     let termHoverWord = '';
     let lastGoogleFetchAt = 0;
@@ -348,7 +454,12 @@ def main() -> None:
 
     function extractFirstUrl(text) {{
       const m = (text || '').match(/https?:\\/\\/[^\\s)\\]]+/i);
-      return m ? m[0] : '';
+      if (m) return m[0];
+      const m2 = (text || '').match(/\\bwww\\.[^\\s)\\]]+/i);
+      if (m2) return `https://${{m2[0]}}`;
+      const m3 = (text || '').match(/\\b[a-z0-9.-]+\\.(?:com|net|org|co\\.kr|kr|go\\.kr|or\\.kr)\\/[^\\s)\\]]*/i);
+      if (m3) return `https://${{m3[0]}}`;
+      return '';
     }}
 
     function escapeHtml(s) {{
@@ -655,72 +766,128 @@ def main() -> None:
       termHoverWord = '';
     }}
 
-    async function tryOpenQrPopupFromImage(imgEl, ev, fallbackUrl) {{
-      const popup = (url) => openWebModal(url, 'QR 연결 페이지');
+    async function detectQrRawFromCanvas(canvas) {{
       try {{
         if ('BarcodeDetector' in window) {{
           const detector = new BarcodeDetector({{ formats: ['qr_code'] }});
-          const natW = imgEl.naturalWidth || imgEl.width;
-          const natH = imgEl.naturalHeight || imgEl.height;
-          if (!natW || !natH) throw new Error('image-size');
-          const rect = imgEl.getBoundingClientRect();
-          const relX = Math.max(0, Math.min(1, (ev.clientX - rect.left) / Math.max(1, rect.width)));
-          const relY = Math.max(0, Math.min(1, (ev.clientY - rect.top) / Math.max(1, rect.height)));
-
-          const baseCanvas = document.createElement('canvas');
-          baseCanvas.width = natW;
-          baseCanvas.height = natH;
-          const bctx = baseCanvas.getContext('2d');
-          bctx.drawImage(imgEl, 0, 0, natW, natH);
-
-          const regions = [];
-          regions.push({{ x: 0, y: 0, w: natW, h: natH }});
-          regions.push({{ x: 0, y: 0, w: Math.floor(natW * 0.55), h: Math.floor(natH * 0.55) }});
-          regions.push({{ x: Math.floor(natW * 0.45), y: 0, w: Math.floor(natW * 0.55), h: Math.floor(natH * 0.55) }});
-          regions.push({{ x: 0, y: Math.floor(natH * 0.45), w: Math.floor(natW * 0.55), h: Math.floor(natH * 0.55) }});
-          regions.push({{ x: Math.floor(natW * 0.45), y: Math.floor(natH * 0.45), w: Math.floor(natW * 0.55), h: Math.floor(natH * 0.55) }});
-
-          const cx = Math.floor(relX * natW);
-          const cy = Math.floor(relY * natH);
-          const sizes = [0.25, 0.38, 0.55];
-          sizes.forEach((r) => {{
-            const rw = Math.floor(natW * r);
-            const rh = Math.floor(natH * r);
-            regions.push({{
-              x: Math.max(0, Math.min(natW - rw, cx - Math.floor(rw / 2))),
-              y: Math.max(0, Math.min(natH - rh, cy - Math.floor(rh / 2))),
-              w: rw,
-              h: rh,
-            }});
+          const found = await detector.detect(canvas);
+          if (found && found.length) {{
+            const raw = (found[0].rawValue || '').trim();
+            if (raw) return raw;
+          }}
+        }}
+      }} catch (_) {{
+        // ignore and try jsQR fallback
+      }}
+      try {{
+        if (window.jsQR) {{
+          const ctx = canvas.getContext('2d');
+          const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const code = window.jsQR(imgData.data, canvas.width, canvas.height, {{
+            inversionAttempts: 'attemptBoth'
           }});
+          if (code && code.data) return String(code.data).trim();
+        }}
+      }} catch (_) {{
+        // ignore
+      }}
+      return '';
+    }}
 
-          const scales = [1, 1.5, 2];
-          for (const reg of regions) {{
-            for (const sc of scales) {{
-              const c = document.createElement('canvas');
-              c.width = Math.max(1, Math.floor(reg.w * sc));
-              c.height = Math.max(1, Math.floor(reg.h * sc));
-              const ctx = c.getContext('2d');
-              ctx.imageSmoothingEnabled = true;
-              ctx.imageSmoothingQuality = 'high';
-              ctx.drawImage(baseCanvas, reg.x, reg.y, reg.w, reg.h, 0, 0, c.width, c.height);
-              const found = await detector.detect(c);
-              if (found && found.length) {{
-                const raw = (found[0].rawValue || '').trim();
-                if (raw) {{
-                  const target = /^https?:\\/\\//i.test(raw) ? raw : `https://${{raw}}`;
-                  popup(target);
-                  return;
-                }}
-              }}
+    const comicUrlCache = {{}};
+    async function resolveComicFallbackUrl() {{
+      if (currentComicUrlFallback) return currentComicUrlFallback;
+      // 1) 사전 스캔한 QR URL 맵 우선 사용
+      const p = Number(currentComicPageNo || 0);
+      if (p > 0) {{
+        if (QR_PAGE_URLS[p]) return QR_PAGE_URLS[p];
+        for (let d = 1; d <= 3; d += 1) {{
+          if (QR_PAGE_URLS[p - d]) return QR_PAGE_URLS[p - d];
+          if (QR_PAGE_URLS[p + d]) return QR_PAGE_URLS[p + d];
+        }}
+      }}
+      // 2) 텍스트 파일에서 URL 추출
+      const key = String(currentComicTextFile || '').trim();
+      if (!key) return '';
+      if (comicUrlCache[key] !== undefined) return comicUrlCache[key];
+      try {{
+        const res = await fetch(safeEncode(key));
+        if (!res.ok) {{
+          comicUrlCache[key] = '';
+          return '';
+        }}
+        const txt = await res.text();
+        const u = extractFirstUrl(txt || '');
+        comicUrlCache[key] = u || '';
+        return comicUrlCache[key];
+      }} catch (_) {{
+        comicUrlCache[key] = '';
+        return '';
+      }}
+    }}
+
+    async function tryOpenQrPopupFromImage(imgEl, ev, fallbackUrl) {{
+      const popup = (url) => openWebModal(url, 'QR 연결 페이지');
+      try {{
+        const natW = imgEl.naturalWidth || imgEl.width;
+        const natH = imgEl.naturalHeight || imgEl.height;
+        if (!natW || !natH) throw new Error('image-size');
+        const rect = imgEl.getBoundingClientRect();
+        const relX = Math.max(0, Math.min(1, (ev.clientX - rect.left) / Math.max(1, rect.width)));
+        const relY = Math.max(0, Math.min(1, (ev.clientY - rect.top) / Math.max(1, rect.height)));
+
+        const baseCanvas = document.createElement('canvas');
+        baseCanvas.width = natW;
+        baseCanvas.height = natH;
+        const bctx = baseCanvas.getContext('2d');
+        bctx.drawImage(imgEl, 0, 0, natW, natH);
+
+        const regions = [];
+        regions.push({{ x: 0, y: 0, w: natW, h: natH }});
+        regions.push({{ x: 0, y: 0, w: Math.floor(natW * 0.55), h: Math.floor(natH * 0.55) }});
+        regions.push({{ x: Math.floor(natW * 0.45), y: 0, w: Math.floor(natW * 0.55), h: Math.floor(natH * 0.55) }});
+        regions.push({{ x: 0, y: Math.floor(natH * 0.45), w: Math.floor(natW * 0.55), h: Math.floor(natH * 0.55) }});
+        regions.push({{ x: Math.floor(natW * 0.45), y: Math.floor(natH * 0.45), w: Math.floor(natW * 0.55), h: Math.floor(natH * 0.55) }});
+
+        const cx = Math.floor(relX * natW);
+        const cy = Math.floor(relY * natH);
+        const sizes = [0.25, 0.38, 0.55];
+        sizes.forEach((r) => {{
+          const rw = Math.floor(natW * r);
+          const rh = Math.floor(natH * r);
+          regions.push({{
+            x: Math.max(0, Math.min(natW - rw, cx - Math.floor(rw / 2))),
+            y: Math.max(0, Math.min(natH - rh, cy - Math.floor(rh / 2))),
+            w: rw,
+            h: rh,
+          }});
+        }});
+
+        const scales = [1, 1.5, 2];
+        for (const reg of regions) {{
+          for (const sc of scales) {{
+            const c = document.createElement('canvas');
+            c.width = Math.max(1, Math.floor(reg.w * sc));
+            c.height = Math.max(1, Math.floor(reg.h * sc));
+            const ctx = c.getContext('2d');
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(baseCanvas, reg.x, reg.y, reg.w, reg.h, 0, 0, c.width, c.height);
+            const raw = await detectQrRawFromCanvas(c);
+            if (raw) {{
+              const target = /^https?:\\/\\//i.test(raw) ? raw : `https://${{raw}}`;
+              popup(target);
+              return;
             }}
           }}
         }}
       }} catch (_) {{
         // ignore and fallback below
       }}
-      if (fallbackUrl) {{
-        popup(fallbackUrl);
+      const textUrl = await resolveComicFallbackUrl();
+      const bestFallback = fallbackUrl || textUrl;
+      if (bestFallback) {{
+        popup(bestFallback);
         return;
       }}
       alert('QR 코드를 인식하지 못했습니다. 다른 위치를 클릭하거나 잠시 후 다시 시도해 주세요.');
@@ -768,13 +935,17 @@ def main() -> None:
         img.src = safeEncode(comicDoc.first_image_file);
         img.alt = e.article_label;
         img.loading = 'lazy';
-        currentComicUrlFallback = extractFirstUrl(comicDoc.first_text_preview || '');
+        currentComicUrlFallback = extractFirstUrl(comicDoc.first_text_preview || '') || ARTICLE_QR_FALLBACK[String(e.article_key)] || '';
+        currentComicTextFile = comicDoc.first_text_file || '';
+        currentComicPageNo = Number(comicDoc.first_page || 0);
         img.style.cursor = 'zoom-in';
         img.title = 'QR 코드 영역을 클릭해 보세요';
         img.onclick = (ev) => tryOpenQrPopupFromImage(img, ev, currentComicUrlFallback);
         comicImageWrap.appendChild(img);
       }} else {{
         currentComicUrlFallback = '';
+        currentComicTextFile = '';
+        currentComicPageNo = 0;
         comicImageWrap.textContent = '삽화 이미지가 없습니다.';
       }}
 
@@ -809,7 +980,16 @@ def main() -> None:
     }}
 
     function savePhotos(items) {{
-      let arr = items.slice(0, MAX_PHOTOS);
+      // 조항별 최대 저장 개수를 제한한다.
+      const countByArticle = {{}};
+      const arr = [];
+      for (const item of (items || [])) {{
+        const key = String(item?.articleKey || '');
+        countByArticle[key] = Number(countByArticle[key] || 0);
+        if (countByArticle[key] >= MAX_PHOTOS) continue;
+        arr.push(item);
+        countByArticle[key] += 1;
+      }}
       while (arr.length >= 0) {{
         try {{
           localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
@@ -820,6 +1000,51 @@ def main() -> None:
         }}
       }}
       return false;
+    }}
+
+    function ensurePresetArticle43Photos() {{
+      try {{
+        const alreadySeeded = localStorage.getItem(PRESET_FLAG_KEY) === '1';
+        let all = loadPhotos();
+        let changed = false;
+        const now = new Date().toISOString();
+
+        for (const p of PRESET_ARTICLE_43) {{
+          const idx = all.findIndex(x => x.id === p.id);
+          if (idx >= 0) {{
+            const old = all[idx] || {{}};
+            all[idx] = {{
+              ...old,
+              id: p.id,
+              name: p.name,
+              dataUrl: p.dataUrl,
+              articleKey: p.articleKey,
+              articleLabel: p.articleLabel,
+              likeCount: Number(p.likeCount || 0),
+              dislikeCount: Number(p.dislikeCount || 0),
+            }};
+            changed = true;
+          }} else {{
+            all.unshift({{
+              id: p.id,
+              name: p.name,
+              dataUrl: p.dataUrl,
+              createdAt: now,
+              articleKey: p.articleKey,
+              articleLabel: p.articleLabel,
+              reaction: '',
+              likeCount: Number(p.likeCount || 0),
+              dislikeCount: Number(p.dislikeCount || 0),
+            }});
+            changed = true;
+          }}
+        }}
+
+        if (changed) savePhotos(all);
+        if (!alreadySeeded) localStorage.setItem(PRESET_FLAG_KEY, '1');
+      }} catch (_) {{
+        // ignore
+      }}
     }}
 
     async function fileToCompressedDataUrl(file, maxW = 1400, quality = 0.72) {{
@@ -856,6 +1081,45 @@ def main() -> None:
 
     function saveCrimeExamples(items) {{
       localStorage.setItem(CRIME_STORAGE_KEY, JSON.stringify(items));
+    }}
+
+    function ensurePresetCrimeExamples() {{
+      try {{
+        const all = loadCrimeExamples();
+        let changed = false;
+        const now = new Date().toISOString();
+        for (const p of PRESET_CRIME_EXAMPLES) {{
+          const idx = all.findIndex(x => x.id === p.id);
+          if (idx >= 0) {{
+            const old = all[idx] || {{}};
+            all[idx] = {{
+              ...old,
+              id: p.id,
+              articleKey: p.articleKey,
+              articleLabel: p.articleLabel,
+              text: p.text,
+              likeCount: Number(p.likeCount || 0),
+              dislikeCount: Number(p.dislikeCount || 0),
+            }};
+            changed = true;
+          }} else {{
+            all.unshift({{
+              id: p.id,
+              articleKey: p.articleKey,
+              articleLabel: p.articleLabel,
+              text: p.text,
+              createdAt: now,
+              reaction: '',
+              likeCount: Number(p.likeCount || 0),
+              dislikeCount: Number(p.dislikeCount || 0),
+            }});
+            changed = true;
+          }}
+        }}
+        if (changed) saveCrimeExamples(all);
+      }} catch (_) {{
+        // ignore
+      }}
     }}
 
     function applyReaction(item, target) {{
@@ -1199,6 +1463,8 @@ def main() -> None:
       tryNextHero();
     }} catch (_) {{}}
 
+    ensurePresetArticle43Photos();
+    ensurePresetCrimeExamples();
     fillSelect(entries);
     if (!entries.length) {{
       homeScreen.style.display = 'none';
