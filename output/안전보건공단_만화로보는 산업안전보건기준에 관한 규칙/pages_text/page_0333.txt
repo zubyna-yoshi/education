@@ -1,0 +1,113 @@
+333
+별표·별지
+별표·별지
+39) 메틸 클로라이드(Methyl chloride; 74-87-3)
+40) 메틸 클로로포름(Methyl chloroform; 71-55-6)
+41)  메틸렌 비스(페닐 이소시아네이트) 
+ 
+(Methylene bis(phenyl isocyanate); 101-68-8 등)
+42) o-메틸시클로헥사논(o-Methylcyclohexanone; 583-60-8)
+43) 메틸시클로헥사놀(Methylcyclohexanol; 25639-42-3 등)
+44) 무수 말레산(Maleic anhydride; 108-31-6)
+45) 무수 프탈산(Phthalic anhydride; 85-44-9)
+46) 벤젠(Benzene; 71-43-2)(특별관리물질)
+47) 벤조(a)피렌[Benzo(a)pyrene; 50-32-8](특별관리물질)
+48) 1,3-부타디엔(1,3-Butadiene; 106-99-0)(특별관리물질)
+49) n-부탄올(n-Butanol; 71-36-3)
+50) 2-부탄올(2-Butanol; 78-92-2)
+51) 2-부톡시에탄올(2-Butoxyethanol; 111-76-2)
+52) 2-부톡시에틸 아세테이트(2-Butoxyethyl acetate; 112-07-2 )
+53) n-부틸 아세테이트(n-Butyl acetate; 123-86-4)
+54) 1-브로모프로판(1-Bromopropane; 106-94-5)(특별관리물질)
+55) 2-브로모프로판(2-Bromopropane; 75-26-3)(특별관리물질)
+56) 브롬화 메틸(Methyl bromide; 74-83-9)
+57) 브이엠 및 피 나프타(VM&P Naphtha; 8032-32-4)
+58) 비닐 아세테이트(Vinyl acetate; 108-05-4)
+59) 사염화탄소(Carbon tetrachloride; 56-23-5)(특별관리물질)
+60)  스토다드 솔벤트(Stoddard solvent; 8052-41-3) 
+ 
+(벤젠을 0.1% 이상 함유한 경우만 특별관리물질)
+61) 스티렌(Styrene; 100-42-5)
+62) 시클로헥사논(Cyclohexanone; 108-94-1)
+63) 시클로헥사놀(Cyclohexanol; 108-93-0)
+64) 시클로헥산(Cyclohexane; 110-82-7)
+65) 시클로헥센(Cyclohexene; 110-83-8)
+66) 시클로헥실아민(Cyclohexylamine; 108-91-8)
+67) 아닐린[62-53-3] 및 그 동족체(Aniline and its homologues)
+68) 아세토니트릴(Acetonitrile; 75-05-8)
+69) 아세톤(Acetone; 67-64-1)
+70) 아세트알데히드(Acetaldehyde; 75-07-0)
+71) 아크릴로니트릴(Acrylonitrile; 107-13-1)(특별관리물질)
+72) 아크릴아미드(Acrylamide; 79-06-1)(특별관리물질)
+73) 알릴 글리시딜 에테르(Allyl glycidyl ether; 106-92-3)
+74) 에탄올아민(Ethanolamine; 141-43-5)
+75) 2-에톡시에탄올(2-Ethoxyethanol; 110-80-5)(특별관리물질)
+76)  2-에톡시에틸 아세테이트(2-Ethoxyethyl acetate; 111-15-9)
+(특별관리물질)
+77) 에틸 벤젠(Ethyl benzene; 100-41-4)
+78) 에틸 아세테이트(Ethyl acetate; 141-78-6)
+79) 에틸 아크릴레이트(Ethyl acrylate; 140-88-5)
+80) 에틸렌 글리콜(Ethylene glycol; 107-21-1)
+81)  에틸렌 글리콜 디니트레이트(Ethylene glycol dinitrate; 628-
+96-6)
+82) 에틸렌 클로로히드린(Ethylene chlorohydrin; 107-07-3)
+83) 에틸렌이민(Ethyleneimine; 151-56-4)(특별관리물질)
+84) 에틸아민(Ethylamine; 75-04-7)
+85)   2,3-에폭시-1-프로판올 
+ 
+ 
+(2,3-Epoxy-1-propanol; 556-52-5 등)(특별관리물질)
+86)  1,2-에폭시프로판(1,2-Epoxypropane; 75-56-9 등) 
+(특별관리물질)
+87)  에피클로로히드린(Epichlorohydrin; 106-89-8 등)  
+(특별관리물질)
+88) 와파린(Warfarin; 81-81-2)(특별관리물질)
+89) 요오드화 메틸(Methyl iodide; 74-88-4)
+90) 이소부틸 아세테이트(Isobutyl acetate; 110-19-0)
+91) 이소부틸 알코올(Isobutyl alcohol; 78-83-1)
+92) 이소아밀 아세테이트(Isoamyl acetate; 123-92-2)
+93) 이소아밀 알코올(Isoamyl alcohol; 123-51-3)
+94) 이소프로필 아세테이트(Isopropyl acetate; 108-21-4)
+95) 이소프로필 알코올(Isopropyl alcohol; 67-63-0)
+96) 이황화탄소(Carbon disulfide; 75-15-0)
+97) 크레졸(Cresol; 1319-77-3 등)
+98) 크실렌(Xylene; 1330-20-7 등)
+99)  2-클로로-1,3-부타디엔 
+ 
+ 
+(2-Chloro-1,3-butadiene; 126-99-8)
+100) 클로로벤젠(Chlorobenzene; 108-90-7)
+101)  1,1,2,2-테트라클로로에탄(1,1,2,2-Tetrachloroethane; 
+79-34-5)
+102) 테트라히드로푸란(Tetrahydrofuran; 109-99-9)
+103) 톨루엔(Toluene; 108-88-3)
+104)  톨루엔-2,4-디이소시아네이트(Toluene-2,4-diisocyanate; 
+584-84-9 등)
+105)  톨루엔-2,6-디이소시아네이트 
+ 
+(Toluene-2,6-diisocyanate); 91-08-7 등)
+106) 트리에틸아민(Triethylamine; 121-44-8)
+107) 트리클로로메탄(Trichloromethane; 67-66-3)
+108) 1,1,2-트리클로로에탄(1,1,2-Trichloroethane; 79-00-5)
+109)  트리클로로에틸렌(Trichloroethylene; 79-01-6)(특별관리
+물질)
+110)  1,2,3-트리클로로프로판(1,2,3-Trichloropropane; 96-18-4)
+(특별관리물질)
+111)  퍼클로로에틸렌(Perchloroethylene; 127-18-4) 
+ 
+(특별관리물질)
+112) 페놀(Phenol; 108-95-2)(특별관리물질)
+113) 페닐 글리시딜 에테르(Phenyl glycidyl ether; 122-60-1 등)
+114) 포름아미드(Formamide; 75-12-7)(특별관리물질)
+115) 포름알데히드(Formaldehyde; 50-00-0)(특별관리물질)
+116) 프로필렌이민(Propyleneimine; 75-55-8)(특별관리물질)
+117) n-프로필 아세테이트(n-Propyl acetate; 109-60-4)
+118) 피리딘(Pyridine; 110-86-1)
+119)  헥사메틸렌 디이소시아네이트 
+ 
+(Hexamethylene diisocyanate; 822-06-0)
+120) n-헥산(n-Hexane; 110-54-3)
+121) n-헵탄(n-Heptane; 142-82-5)
+122) 황산 디메틸(Dimethyl sulfate; 77-78-1)(특별관리물질)
+123)  히드라진[302-01-2] 및 그 수화물 
+ 

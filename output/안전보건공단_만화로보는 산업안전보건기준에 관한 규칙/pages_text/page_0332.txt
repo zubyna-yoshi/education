@@ -1,0 +1,73 @@
+332
+별표·별지
+산업안전보건기준에 관한 규칙  
+[ 별표 10 ]
+[별표 11]
+  삭제(2023. 11. 14.)
+  굴착면의 기울기 기준(제339조제1항 관련) 
+지반의 종류
+굴착면의 기울기
+모래
+1 : 1.8
+연암 및 풍화암
+1 : 1.0
+경암
+1 : 0.5
+그 밖의 흙
+1 : 1.2
+[ 별표 12 ] <개정 2022. 10. 18.>
+  관리대상 유해물질의 종류
+  (제420조, 제439조 및 제440조 관련)
+1. 유기화합물(123종)
+1) 글루타르알데히드(Glutaraldehyde; 111-30-8)
+2) 니트로글리세린(Nitroglycerin; 55-63-0)
+3) 니트로메탄(Nitromethane; 75-52-5)
+4) 니트로벤젠(Nitrobenzene; 98-95-3)
+5) p-니트로아닐린(p-Nitroaniline; 100-01-6)
+6) p-니트로클로로벤젠(p-Nitrochlorobenzene; 100-00-5)
+7) 2-니트로톨루엔(2-Nitrotoluene; 88-72-2)(특별관리물질)
+8)  디(2-에틸헥실)프탈레이트(Di(2-ethylhexyl)phthalate;  
+117-81-7)
+9) 디니트로톨루엔(Dinitrotoluene; 25321-14-6 등)(특별관리물질)
+10) N,N-디메틸아닐린(N,N-Dimethylaniline; 121-69-7)
+11) 디메틸아민(Dimethylamine; 124-40-3)
+12)  N,N-디메틸아세트아미드(N,N-Dimethylacetamide;  
+127-19-5)(특별관리물질)
+13)  디메틸포름아미드(Dimethylformamide;68-12-2)  
+(특별관리물질)
+14)  디부틸 프탈레이트(Dibutyl phthalate; 84-74-2)(특별관리물질)
+15) 디에탄올아민(Diethanolamine; 111-42-2)
+16) 디에틸 에테르(Diethyl ether; 60-29-7)
+17) 디에틸렌트리아민(Diethylenetriamine; 111-40-0)
+18) 2-디에틸아미노에탄올(2-Diethylaminoethanol; 100-37-8)
+19) 디에틸아민(Diethylamine; 109-89-7)
+20) 1,4-디옥산(1,4-Dioxane; 123-91-1)
+21) 디이소부틸케톤(Diisobutylketone; 108-83-8)
+22)  1,1-디클로로-1-플루오로에탄 (1,1-Dichloro-1-fluoroethane; 
+1717-00-6)
+23) 디클로로메탄(Dichloromethane; 75-09-2)
+24) o-디클로로벤젠(o-Dichlorobenzene; 95-50-1)
+25)  1,2-디클로로에탄(1,2-Dichloroethane; 107-06-2)(특별관리
+물질)
+26) 1,2-디클로로에틸렌(1,2-Dichloroethylene; 540-59-0 등)
+27)  1,2-디클로로프로판(1,2-Dichloropropane; 78-87-5) 
+(특별관리물질)
+28) 디클로로플루오로메탄(Dichlorofluoromethane; 75-43-4)
+29) p-디히드록시벤젠(p-dihydroxybenzene; 123-31-9)
+30) 메탄올(Methanol; 67-56-1)
+31)  2-메톡시에탄올(2-Methoxyethanol;109-86-4)(특별관리물질)
+32)  2-메톡시에틸 아세테이트(2-Methoxyethyl acetate; 110-49-
+6)(특별관리물질)
+33) 메틸 n-부틸 케톤(Methyl n-butyl ketone; 591-78-6)
+34) 메틸 n-아밀 케톤(Methyl n-amyl ketone; 110-43-0)
+35) 메틸 아민(Methyl amine; 74-89-5)
+36) 메틸 아세테이트(Methyl acetate; 79-20-9)
+37) 메틸 에틸 케톤(Methyl ethyl ketone; 78-93-3)
+38) 메틸 이소부틸 케톤(Methyl isobutyl ketone; 108-10-1)
+비고
+1.  굴착면의 기울기는 굴착면의 높이에 대한 수평거리의 비율을 말
+한다.
+2.  굴착면의 경사가 달라서 기울기를 계산하기가 곤란한 경우에는 
+해당 굴착면에 대하여 지반의 종류별 굴착면의 기울기에 따라 
+붕괴의 위험이 증가하지 않도록 위 표의 지반의 종류별 굴착
+면의 기울기에 맞게 해당 각 부분의 경사를 유지해야 한다.

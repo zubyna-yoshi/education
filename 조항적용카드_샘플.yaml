@@ -1,0 +1,59 @@
+card_id: CLAUSE_CARD_0001
+law:
+  name: 산업안전보건기준에 관한 규칙
+  article_no: 제00조
+  paragraph_no: 1
+  subparagraph_no: null
+  effective_date: 2026-01-01
+
+plain_summary: |
+  이 조항은 [어떤 작업/설비]에서 [어떤 안전조치]를 요구한다.
+
+hazard_tags:
+  - 추락
+  - 협착
+  - 감전
+
+applicability_conditions:
+  - 작업 대상이 해당 설비/공정에 해당한다.
+  - 법에서 요구하는 방호/절차가 미이행 상태다.
+
+exclusion_conditions:
+  - 법 적용 제외 대상에 해당한다.
+  - 동일 위험이 다른 조항으로 우선 적용된다.
+
+evidence_required:
+  - 현장 전경 사진(작업 위치 식별 가능)
+  - 위험 지점 근접 사진(방호장치 부재/불량 확인)
+  - 작업지시서/점검기록/교육기록
+
+decision_guide:
+  applied:
+    - 성립요건 2개 이상 충족 + 반대증거 없음
+  not_applied:
+    - 의무주체 불일치 또는 적용요건 미충족
+  needs_more:
+    - 사진 식별 불가 또는 문서증거 부족
+
+actions:
+  immediate:
+    - 급박 위험 시 작업중지 검토
+    - 임시 방호조치 및 접근통제
+  administrative:
+    - 시정지시
+    - 개선계획 제출 요구
+  criminal_review:
+    - 중대 결과 발생 여부 확인
+    - 반복 위반/인지 후 방치 정황 확인
+
+canonical_examples:
+  - title: 방호울 미설치 상태에서 회전체 노출
+    expected_decision: applied
+  - title: 방호장치 있으나 잠금해제 후 임의 운전
+    expected_decision: needs_more
+
+review:
+  status: draft
+  owner: inspector_team_a
+  reviewer: null
+  updated_at: 2026-04-09
