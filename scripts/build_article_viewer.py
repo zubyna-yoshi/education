@@ -156,10 +156,17 @@ def main() -> None:
     .image-hint {{ margin-top: 6px; font-size: 12px; color: var(--muted); }}
 
     .text-box {{ margin-top: 10px; border: 1px solid var(--line); border-radius: 10px; background: #fafcff; padding: 10px; white-space: pre-wrap; font-size: 13px; line-height: 1.5; max-height: 220px; overflow: auto; }}
+    .select-result {{ margin-top: 10px; border: 1px solid #d7e2f0; border-radius: 10px; background: #ffffff; padding: 10px; }}
+    .select-result-title {{ font-size: 12px; color: #4b5f78; margin-bottom: 6px; }}
+    .select-result-query {{ font-weight: 700; color: #1b3658; margin-bottom: 6px; }}
+    .select-result-body {{ font-size: 12px; color: #30465f; line-height: 1.45; white-space: pre-wrap; }}
+    .select-result-actions {{ margin-top: 8px; display: flex; justify-content: flex-end; }}
+    .select-result-link {{ font-size: 12px; color: #0b57d0; text-decoration: underline; cursor: pointer; }}
 
     .split {{ display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px; }}
     .mini {{ border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: #fff; }}
     .mini-title {{ font-weight: 700; font-size: 13px; margin-bottom: 6px; }}
+    .mini-title-hint {{ font-weight: 500; font-size: 12px; color: #5f6c7b; margin-left: 6px; }}
 
     .upload-area {{ border: 1px dashed #9fb7dc; border-radius: 12px; padding: 12px; background: var(--accent-soft); }}
     .upload-top {{ display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }}
@@ -211,6 +218,8 @@ def main() -> None:
     .modal.show {{ display: flex; }}
     .modal-content {{ max-width: min(94vw, 1200px); max-height: 90vh; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.35); }}
     .modal-head {{ display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid #e1e7ef; font-size: 13px; color: #42556d; }}
+    .modal-head-left {{ display: flex; align-items: center; gap: 10px; min-width: 0; }}
+    .web-origin-link {{ color: #0b57d0; font-size: 12px; text-decoration: underline; white-space: nowrap; }}
     .modal-head button {{ background: #edf2f8; color: #223954; border: 1px solid #ccdae9; padding: 6px 10px; border-radius: 8px; font-size: 12px; }}
     .modal-body {{ background: #f1f5fa; }}
     .modal-body img {{ display: block; max-width: min(94vw, 1200px); max-height: calc(90vh - 52px); width: auto; height: auto; margin: 0 auto; }}
@@ -266,8 +275,12 @@ def main() -> None:
 
           <div class=\"split\">
             <div class=\"mini\">
-              <div class=\"mini-title\">법제처 조항 본문</div>
+              <div class=\"mini-title\">법제처 조항 본문<span class=\"mini-title-hint\">(아래 단어를 드래그하여 뜻 검색)</span></div>
               <div id=\"lawText\" class=\"text-box\"></div>
+              <div id=\"lawSelectResult\" class=\"select-result\">
+                <div class=\"select-result-title\">드래그 검색</div>
+                <div class=\"select-result-body\">원하는 단어/문장을 드래그하면 산업안전보건 맥락으로 네이버 검색 요약을 보여줍니다.</div>
+              </div>
             </div>
           </div>
         </div>
@@ -312,7 +325,10 @@ def main() -> None:
   <div id=\"webModal\" class=\"modal\">
     <div class=\"modal-content\">
       <div class=\"modal-head\">
-        <span id=\"webModalTitle\">웹 보기</span>
+        <div class=\"modal-head-left\">
+          <span id=\"webModalTitle\">웹 보기</span>
+          <a id=\"webModalRawLink\" class=\"web-origin-link\" href=\"#\" target=\"_blank\" rel=\"noopener noreferrer\">원문 열기</a>
+        </div>
         <button id=\"webModalClose\" type=\"button\">닫기</button>
       </div>
       <div class=\"web-modal-body\">
@@ -341,6 +357,7 @@ def main() -> None:
     const leftMeta = document.getElementById('leftMeta');
     const comicImageWrap = document.getElementById('comicImageWrap');
     const lawText = document.getElementById('lawText');
+    const lawSelectResult = document.getElementById('lawSelectResult');
 
     const photoInput = document.getElementById('photoInput');
     const clearPhotosBtn = document.getElementById('clearPhotos');
@@ -358,6 +375,7 @@ def main() -> None:
     const webModalFrame = document.getElementById('webModalFrame');
     const webModalTitle = document.getElementById('webModalTitle');
     const webModalClose = document.getElementById('webModalClose');
+    const webModalRawLink = document.getElementById('webModalRawLink');
 
     const STORAGE_KEY = 'labor_inspector_uploaded_photos_v1';
     const CRIME_STORAGE_KEY = 'labor_inspector_crime_examples_v1';
@@ -442,8 +460,13 @@ def main() -> None:
     }}
 
     function openWebModal(url, title) {{
+      const raw = /^https?:\\/\\//i.test(String(url || '').trim()) ? String(url || '').trim() : `https://${{String(url || '').trim()}}`;
+      const proxy = raw ? `https://r.jina.ai/http://${{raw.replace(/^https?:\\/\\//i, '')}}` : 'about:blank';
       webModalTitle.textContent = title || '웹 보기';
-      webModalFrame.src = url || 'about:blank';
+      if (webModalRawLink) {{
+        webModalRawLink.href = raw || '#';
+      }}
+      webModalFrame.src = proxy;
       webModal.classList.add('show');
     }}
 
@@ -460,6 +483,33 @@ def main() -> None:
       const m3 = (text || '').match(/\\b[a-z0-9.-]+\\.(?:com|net|org|co\\.kr|kr|go\\.kr|or\\.kr)\\/[^\\s)\\]]*/i);
       if (m3) return `https://${{m3[0]}}`;
       return '';
+    }}
+
+    function normalizeSelectionText(s) {{
+      return String(s || '').replace(/\\s+/g, ' ').trim();
+    }}
+
+    function renderLawSelectResult(query, body, searchUrl) {{
+      if (!lawSelectResult) return;
+      const safeQuery = escapeHtml(query || '');
+      const safeBody = escapeHtml(body || '');
+      const safeUrl = escapeHtml(searchUrl || '#');
+      lawSelectResult.innerHTML = `
+        <div class=\"select-result-title\">선택 검색 결과</div>
+        <div class=\"select-result-query\">${{safeQuery}}</div>
+        <div class=\"select-result-body\">${{safeBody}}</div>
+        <div class=\"select-result-actions\">
+          <a class=\"select-result-link\" href=\"${{safeUrl}}\" target=\"_blank\" rel=\"noopener noreferrer\">네이버 원문 검색</a>
+        </div>
+      `;
+    }}
+
+    function resetLawSelectResult() {{
+      if (!lawSelectResult) return;
+      lawSelectResult.innerHTML = `
+        <div class=\"select-result-title\">드래그 검색</div>
+        <div class=\"select-result-body\">원하는 단어/문장을 드래그하면 산업안전보건 맥락으로 네이버 검색 요약을 보여줍니다.</div>
+      `;
     }}
 
     function escapeHtml(s) {{
@@ -610,6 +660,7 @@ def main() -> None:
         .filter(Boolean)
         .filter(s => !s.startsWith('Title:') && !s.startsWith('URL Source:') && !s.startsWith('Markdown Content:'))
         .filter(s => !/^https?:\\/\\//i.test(s))
+        .filter(s => !/(광고|쇼핑|쿠팡|네이버페이|파트너스|후기|리뷰|판매|최저가|가격비교|추천상품|체험단)/i.test(s))
         .join(' ')
         .replace(/\\[[^\\]]+\\]\\((https?:\\/\\/[^)]+)\\)/g, ' ')
         .replace(/https?:\\/\\/[^\\s)\\]]+/g, ' ')
@@ -625,46 +676,250 @@ def main() -> None:
       return (picked || txt).slice(0, maxLen).trim();
     }}
 
+    function cleanMeaningText(raw, term = '') {{
+      const t = cleanProxyText(raw);
+      const lines = t.split(/(?<=[.!?。]|다\\.)\\s+/).map(s => s.trim()).filter(Boolean);
+      const filtered = lines.filter((line) => {{
+        if (line.length < 8) return false;
+        if (/(광고|쇼핑|쿠팡|네이버페이|파트너스|판매|최저가|가격비교|이벤트|할인|구매)/i.test(line)) return false;
+        if (term && line.includes(term)) return true;
+        return /(뜻|의미|정의|란|가리킨다|말한다|지칭)/.test(line);
+      }});
+      const picked = (filtered.length ? filtered : lines).slice(0, 2).join(' ');
+      return picked.slice(0, 280).trim();
+    }}
+
+    async function fetchAndSummarize(url, term) {{
+      try {{
+        const proxy = `https://r.jina.ai/http://${{url.replace(/^https?:\\/\\//i, '')}}`;
+        const res = await fetch(proxy);
+        if (!res.ok) return '';
+        const txt = await res.text();
+        return cleanMeaningText(txt, term);
+      }} catch (_) {{
+        return '';
+      }}
+    }}
+
     async function fetchNaverMeaning(term, queryText) {{
       const q = encodeURIComponent(queryText || term);
       const info = {{ extract: '', normalized: term }};
       try {{
+        // 1) 사전/백과 우선 출처를 직접 조회 (광고성 검색결과 최소화)
+        const preferred = [
+          `https://terms.naver.com/search.naver?query=${{encodeURIComponent(term)}}`,
+          `https://terms.naver.com/entry.naver?docId=${{encodeURIComponent(term)}}`,
+          `https://ko.wikipedia.org/wiki/${{encodeURIComponent(term)}}`,
+          `https://encykorea.aks.ac.kr/Article/Search?keyword=${{encodeURIComponent(term)}}`,
+        ];
+        for (const u of preferred) {{
+          const s = await fetchAndSummarize(u, term);
+          if (s && s.length > 20) {{
+            info.extract = s;
+            return info;
+          }}
+        }}
+
+        // 2) 네이버 통합검색은 최후 fallback
         const searchProxy = `https://r.jina.ai/http://search.naver.com/search.naver?where=nexearch&query=${{q}}`;
         const res = await fetch(searchProxy);
         if (!res.ok) return info;
         const txt = await res.text();
-        let extract = summarizeText(txt, 280);
+        let extract = cleanMeaningText(txt, term);
 
-        // 검색 결과 본문에서 첫 번째 참고 링크를 찾아 한 번 더 본문 추출 시도
         const links = (txt.match(/https?:\\/\\/[^\\s)\\]]+/g) || [])
           .filter(u => !u.includes('r.jina.ai'))
           .filter(u => !u.includes('search.naver.com'))
-          .slice(0, 8);
-        const ref = links.find(u =>
-          u.includes('terms.naver.com') ||
-          u.includes('namu.wiki') ||
-          u.includes('ko.wikipedia.org') ||
-          u.includes('encykorea.aks.ac.kr')
-        ) || links[0];
-
-        if (ref) {{
-          try {{
-            const refProxy = `https://r.jina.ai/http://${{ref.replace(/^https?:\\/\\//, '')}}`;
-            const refRes = await fetch(refProxy);
-            if (refRes.ok) {{
-              const refTxt = await refRes.text();
-              const refined = summarizeText(refTxt, 280);
-              if (refined && refined.length > 30) extract = refined;
-            }}
-          }} catch (_) {{
-            // keep original extract
+          .filter(u => /(terms\\.naver\\.com|ko\\.wikipedia\\.org|encykorea\\.aks\\.ac\\.kr|namu\\.wiki)/i.test(u))
+          .slice(0, 5);
+        for (const ref of links) {{
+          const refined = await fetchAndSummarize(ref, term);
+          if (refined && refined.length > 20) {{
+            extract = refined;
+            break;
           }}
         }}
-        info.extract = (extract || '').replace(/\\s+/g, ' ').trim();
+        info.extract = (extract || summarizeText(txt, 240) || '').replace(/\\s+/g, ' ').trim();
       }} catch (_) {{
         // ignore
       }}
       return info;
+    }}
+
+    async function fetchGoogleMeaning(term, queryText) {{
+      const info = {{ extract: '', normalized: term, rateLimited: false }};
+      try {{
+        const now = Date.now();
+        if (now < googleBlockedUntil) {{
+          info.rateLimited = true;
+          return info;
+        }}
+        const minIntervalMs = 5000;
+        const wait = Math.max(0, minIntervalMs - (now - lastGoogleFetchAt));
+        if (wait > 0) {{
+          await new Promise((r) => setTimeout(r, wait));
+        }}
+        lastGoogleFetchAt = Date.now();
+
+        const q = encodeURIComponent(queryText || term);
+        const proxy = `https://r.jina.ai/http://www.google.com/search?q=${{q}}`;
+        const res = await fetch(proxy);
+        if (res.status === 429) {{
+          googleBlockedUntil = Date.now() + 10 * 60 * 1000;
+          info.rateLimited = true;
+          return info;
+        }}
+        if (!res.ok) return info;
+        const txt = await res.text();
+        if ((txt || '').includes('429') && /too many requests/i.test(txt || '')) {{
+          googleBlockedUntil = Date.now() + 10 * 60 * 1000;
+          info.rateLimited = true;
+          return info;
+        }}
+        let extract = cleanMeaningText(txt, term);
+
+        const links = (txt.match(/https?:\\/\\/[^\\s)\\]]+/g) || [])
+          .filter(u => !u.includes('r.jina.ai'))
+          .filter(u => /(ko\\.wikipedia\\.org|terms\\.naver\\.com|encykorea\\.aks\\.ac\\.kr|kosha\\.or\\.kr|namu\\.wiki)/i.test(u))
+          .slice(0, 6);
+        for (const ref of links) {{
+          const refined = await fetchAndSummarize(ref, term);
+          if (refined && refined.length > 20) {{
+            extract = refined;
+            break;
+          }}
+        }}
+        info.extract = (extract || summarizeText(txt, 240) || '').replace(/\\s+/g, ' ').trim();
+      }} catch (_) {{
+        // ignore
+      }}
+      return info;
+    }}
+
+    function extractFirstKoreanSentence(text) {{
+      const t = String(text || '').replace(/\\s+/g, ' ').trim();
+      if (!t) return '';
+      const parts = t
+        .split(/(?<=[.!?]|다\\.|입니다\\.|이다\\.|합니다\\.)\\s+/)
+        .map(s => s.trim())
+        .filter(Boolean);
+      const skip = /(실험 단계|정확하지 않을 수 있어요|AI 브리핑)/i;
+      const picked = parts.find(s => !skip.test(s) && s.length >= 8) || parts.find(s => s.length >= 8) || '';
+      return picked ? picked.slice(0, 180) : t.slice(0, 140);
+    }}
+
+    function extractAIBriefingSentence(rawChunk, term) {{
+      // AI 브리핑 본문 첫 설명 문단을 최대한 그대로 보여준다.
+      const norm = normalizeKoreanTerm(term || '');
+      const raw = String(rawChunk || '');
+
+      // 0) "검색어의 ..."로 시작하는 AI 브리핑 첫 설명 문단을 우선 직접 추출
+      const direct = raw.match(/검색어의[^\\n]+(?:\\n[^\\n]+)?/);
+      if (direct && direct[0]) {{
+        const d = direct[0]
+          .replace(/\\s+/g, ' ')
+          .replace(/[가-힣A-Za-z0-9_\\-]+\\+\\d+/g, '')
+          .trim();
+        if (d.length >= 15) return d.slice(0, 360);
+      }}
+
+      let t = raw
+        .replace(/\\[[^\\]]*\\]\\([^)]*\\)/g, ' ')
+        .replace(/!\\[[^\\]]*\\]\\([^)]*\\)/g, ' ')
+        .replace(/\\([^)]*https?:\\/\\/[^)]*\\)/g, ' ')
+        .replace(/https?:\\/\\/[^\\s)\\]]+/g, ' ')
+        .replace(/[가-힣A-Za-z0-9_\\-]+\\+\\d+/g, ' ')
+        .replace(/\\s+/g, ' ')
+        .trim();
+      if (!t) return '';
+
+      const parts = t
+        .split(/(?<=[.!?]|다\\.|입니다\\.|이다\\.|합니다\\.)\\s+/)
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      const skip = /(실험 단계|정확하지 않을 수 있어요|AI 브리핑|원문 보기|출처|전체보기|복사하기|도움이 됐어요|Image\\s+\\d+|네이버 블로그|카페|cafe\\.naver\\.com|blog\\.naver\\.com|http|www\\.)/i;
+      const candidates = parts
+        .map(s => s.replace(/^[-*•]\\s*/, '').trim())
+        .filter(s => !skip.test(s) && s.length >= 10);
+
+      // 1) 정의 문장 우선: "<용어>는 ... 뜻하며/의미..."
+      const definitionFirst = candidates.find(s =>
+        (!!norm && (s.startsWith(`${{norm}}는`) || s.includes(`${{norm}}는`) || s.includes(`${{norm}}은`))) &&
+        /(뜻하며|뜻합니다|의미|의미하며|가리키며|정해져 있습니다|설치·구조 기준)/.test(s)
+      );
+      if (definitionFirst) return definitionFirst.slice(0, 320);
+
+      const idx = candidates.findIndex(s =>
+        /검색어의/.test(s) &&
+        /(뜻|의미|정의|해석|의도)/.test(s) &&
+        (!norm || s.includes(norm) || s.includes(term))
+      );
+      if (idx >= 0) {{
+        const first = candidates[idx].replace(/\\s+/g, ' ').trim();
+        const second = (candidates[idx + 1] || '').replace(/\\s+/g, ' ').trim();
+        if (second && !/^(지하실\\s+산업안전보건\\s+뜻|[\\-*•])/.test(second)) {{
+          return `${{first}} ${{second}}`.slice(0, 320);
+        }}
+        return first.slice(0, 260);
+      }}
+
+      const meaningFirst = candidates.find(s =>
+        /(뜻|의미|정의|해석)/.test(s) &&
+        (!norm || s.includes(norm) || s.includes(term))
+      );
+      if (meaningFirst) return meaningFirst.slice(0, 260);
+
+      const first = candidates[0] || '';
+      return first ? first.slice(0, 220) : '';
+    }}
+
+    async function fetchNaverAIBriefingFirstSentence(queryText, term) {{
+      const q = encodeURIComponent(queryText || '');
+      const info = {{ extract: '' }};
+      try {{
+        const proxy = `https://r.jina.ai/http://search.naver.com/search.naver?where=nexearch&query=${{q}}`;
+        const res = await fetch(proxy);
+        if (!res.ok) return info;
+        const raw = await res.text();
+        const marker = 'AI 브리핑';
+        const idx = raw.indexOf(marker);
+        if (idx >= 0) {{
+          const chunk = raw.slice(idx, idx + 7000);
+          const first = extractAIBriefingSentence(chunk, term || queryText);
+          if (first && first.length >= 8) {{
+            info.extract = first;
+            return info;
+          }}
+        }}
+      }} catch (_) {{
+        // ignore
+      }}
+      return info;
+    }}
+
+    let lawSelectTimer = null;
+    async function handleLawTextSelection() {{
+      const sel = window.getSelection();
+      if (!sel || !sel.rangeCount) return;
+      const node = sel.anchorNode;
+      if (!node || !lawText.contains(node)) return;
+      const picked = normalizeSelectionText(sel.toString());
+      if (!picked || picked.length < 2) return;
+      const short = picked.slice(0, 80);
+      const queryText = `${{short}} 산업안전보건 뜻`;
+      const naverUrl = `https://search.naver.com/search.naver?where=nexearch&query=${{encodeURIComponent(queryText)}}`;
+      renderLawSelectResult(short, '파싱 없이 네이버 검색 결과를 작은 팝업 창으로 엽니다.', naverUrl);
+      const width = 980;
+      const height = 760;
+      const left = Math.max(0, Math.floor((window.screen.width - width) / 2));
+      const top = Math.max(0, Math.floor((window.screen.height - height) / 2));
+      const feat = `width=${{width}},height=${{height}},left=${{left}},top=${{top}},resizable=yes,scrollbars=yes`;
+      const w = window.open(naverUrl, 'lawSearchPopup', feat);
+      if (!w) {{
+        // 팝업 차단 환경에서는 새 탭으로 fallback
+        window.open(naverUrl, '_blank', 'noopener,noreferrer');
+      }}
     }}
 
     async function fetchWikiFallback(term) {{
@@ -827,7 +1082,10 @@ def main() -> None:
     }}
 
     async function tryOpenQrPopupFromImage(imgEl, ev, fallbackUrl) {{
-      const popup = (url) => openWebModal(url, 'QR 연결 페이지');
+      const popup = (url) => {{
+        const raw = /^https?:\\/\\//i.test(String(url || '').trim()) ? String(url || '').trim() : `https://${{String(url || '').trim()}}`;
+        window.open(raw, '_blank', 'noopener,noreferrer');
+      }};
       try {{
         const natW = imgEl.naturalWidth || imgEl.width;
         const natH = imgEl.naturalHeight || imgEl.height;
@@ -950,7 +1208,8 @@ def main() -> None:
       }}
 
       const rawLawText = (lawDoc && lawDoc.first_text_preview) ? lawDoc.first_text_preview : '법제처 본문 미리보기가 없습니다.';
-      lawText.innerHTML = annotateTerms(rawLawText);
+      lawText.textContent = rawLawText;
+      resetLawSelectResult();
       renderPhotos();
       renderCrimeExamples();
     }}
@@ -1369,26 +1628,14 @@ def main() -> None:
       renderCrimeExamples();
     }});
 
-    lawText.addEventListener('mouseover', (ev) => {{
-      const t = ev.target.closest('.term');
-      if (!t) return;
-      const term = t.getAttribute('data-term') || '';
-      if (term && term !== termHoverWord) scheduleTermSearch(term, ev);
-      showTermTooltip(t, ev);
+    // 드래그 선택 검색: 법제처 본문에서 선택한 텍스트를 네이버 검색 요약으로 표시
+    lawText.addEventListener('mouseup', () => {{
+      if (lawSelectTimer) clearTimeout(lawSelectTimer);
+      lawSelectTimer = setTimeout(handleLawTextSelection, 120);
     }});
-    lawText.addEventListener('mousemove', (ev) => {{
-      const t = ev.target.closest('.term');
-      if (!t) return;
-      positionTooltip(ev);
-    }});
-    lawText.addEventListener('mouseout', (ev) => {{
-      if (!ev.target.closest('.term')) return;
-      cancelTermSearch();
-      hideTermTooltip();
-    }});
-    termTooltip.addEventListener('mouseleave', () => {{
-      cancelTermSearch();
-      hideTermTooltip();
+    lawText.addEventListener('touchend', () => {{
+      if (lawSelectTimer) clearTimeout(lawSelectTimer);
+      lawSelectTimer = setTimeout(handleLawTextSelection, 180);
     }});
 
     imageModalClose.addEventListener('click', closeImageModal);
