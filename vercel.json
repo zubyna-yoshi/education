@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/output/article_viewer.html",
+      "permanent": false
+    }
+  ]
+}
