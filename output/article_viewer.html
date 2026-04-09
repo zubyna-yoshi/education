@@ -27,13 +27,14 @@
       margin-bottom: 12px;
       box-shadow: 0 8px 24px rgba(15, 23, 42, .06);
     }
-    .home-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 14px; align-items: center; }
+    .home-grid { display: grid; grid-template-columns: 1fr; gap: 14px; align-items: center; }
     .home-title { font-size: 28px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; color: #17365c; }
     .home-sub { font-size: 14px; color: #49617f; margin-bottom: 12px; }
     .home-pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
     .home-pill { font-size: 12px; border: 1px solid #cdddf0; background: #f6faff; border-radius: 999px; padding: 4px 10px; color: #34567f; }
-    .home-img { width: 100%; border: 1px solid #d7e2f0; border-radius: 12px; overflow: hidden; min-height: 220px; background: #eef4fb; }
+    .home-img { width: 100%; border: 1px solid #d7e2f0; border-radius: 12px; overflow: hidden; min-height: 260px; max-height: 480px; background: #eef4fb; }
     .home-img img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 35%; filter: saturate(1.03) contrast(1.02); }
+    #startBtn { display: block; margin: 8px auto 0; padding: 14px 28px; font-size: 18px; font-weight: 800; border-radius: 12px; min-width: 220px; }
     .workspace { display: none; }
 
     .toolbar {
@@ -138,6 +139,7 @@
   <div class="wrap">
     <div id="homeScreen" class="home">
       <div class="home-grid">
+        <div class="home-img"><img id="homeHeroImg" alt="집단지성 대표 이미지" /></div>
         <div>
           <div class="home-title">근로감독관 집단 지성 플랫폼</div>
           <div class="home-sub">현장 사진, 조항 해석, 범죄인지 예시를 함께 쌓아 동일한 상황에서 더 빠르고 일관된 판단을 지원합니다.</div>
@@ -146,9 +148,8 @@
             <span class="home-pill">좋아요/싫어요 기반 집단평가</span>
             <span class="home-pill">현장 사진 중심 학습</span>
           </div>
-          <button id="startBtn" type="button">조항 적용 시작</button>
+          <button id="startBtn" type="button">두뇌 풀가동 시작</button>
         </div>
-        <div class="home-img"><img id="homeHeroImg" alt="집단지성 대표 이미지" /></div>
       </div>
     </div>
 
