@@ -243,7 +243,7 @@
     const workspace = document.getElementById('workspace');
     const startBtn = document.getElementById('startBtn');
     const homeHeroImg = document.getElementById('homeHeroImg');
-    const CUSTOM_HOME_HERO = 'assets/main-photo.png';
+    const CUSTOM_HOME_HERO_CANDIDATES = ['output/assets/main-photo.png', 'assets/main-photo.png'];
 
     const leftMeta = document.getElementById('leftMeta');
     const comicImageWrap = document.getElementById('comicImageWrap');
@@ -1149,16 +1149,23 @@
       if (entries.length) renderArticle(entries[0].article_key);
     });
 
-    // home hero image: custom photo first, then comic illustration fallback
+    // home hero image: try candidate paths, then comic illustration fallback
     try {
       const first = entries[0];
       const docs = first ? Object.values(first.documents || {}) : [];
       const comic = docs.find(d => d.first_image_file && String(d.first_image_file).includes('만화')) || docs.find(d => d.first_image_file);
       const fallbackSrc = (comic && comic.first_image_file) ? safeEncode(comic.first_image_file) : '';
-      homeHeroImg.onerror = () => {
+      let heroIdx = 0;
+      const tryNextHero = () => {
+        if (heroIdx < CUSTOM_HOME_HERO_CANDIDATES.length) {
+          const next = CUSTOM_HOME_HERO_CANDIDATES[heroIdx++];
+          homeHeroImg.src = safeEncode(next);
+          return;
+        }
         if (fallbackSrc) homeHeroImg.src = fallbackSrc;
       };
-      homeHeroImg.src = safeEncode(CUSTOM_HOME_HERO);
+      homeHeroImg.onerror = tryNextHero;
+      tryNextHero();
     } catch (_) {}
 
     fillSelect(entries);
